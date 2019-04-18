@@ -36,7 +36,10 @@ export class Adapter implements TestAdapter {
     this.disposables.push(this.testsEmitter);
     this.disposables.push(this.testStatesEmitter);
     this.disposables.push(this.autorunEmitter);
-    this.testExplorer = new AngularTestExplorer(path.join(workspace.uri.path.replace(/^\/([a-z]):\//, "$1:/")), this.testStatesEmitter);
+    this.testExplorer = new AngularTestExplorer(
+      path.join(workspace.uri.path.replace(/^\/([a-z]):\//, "$1:/")),
+      path.join(__dirname, ".", "config", "test-explorer-karma.conf.js"),
+      this.testStatesEmitter);
   }
 
   public async load(): Promise<void> {
@@ -44,7 +47,7 @@ export class Adapter implements TestAdapter {
 
     this.testsEmitter.fire({ type: "started" } as TestLoadStartedEvent);
 
-    const loadedTests = await this.testExplorer.loadTestsByProject();
+    const loadedTests = await this.testExplorer.loadTests();
 
     this.testsEmitter.fire({ type: "finished", suite: loadedTests } as TestLoadFinishedEvent);
   }
@@ -63,7 +66,7 @@ export class Adapter implements TestAdapter {
   public async debug(tests: string[]): Promise<void> {
     // in a "real" TestAdapter this would start a test run in a child process and attach the debugger to it
     this.log.warn("debug() not implemented yet");
-    throw new Error("Method not implemented.");
+    this.testExplorer.debugTests(tests);
   }
 
   public cancel(): void {
